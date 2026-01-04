@@ -1,0 +1,54 @@
+name: Build Rust TRX Vanity
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # 可手动触发
+
+jobs:
+  build:
+    name: Build Windows & Linux
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu]
+
+    steps:
+      # 1️⃣ Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2️⃣ Install Rust
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      # 3️⃣ Install required targets (Windows cross-compile on Linux)
+      - name: Add target for cross-compile
+        run: |
+          if [ "${{ matrix.target }}" == "x86_64-pc-windows-gnu" ]; then
+            rustup target add x86_64-pc-windows-gnu
+          fi
+
+      # 4️⃣ Install mingw-w64 for Windows cross-compile
+      - name: Install mingw-w64
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: sudo apt-get update && sudo apt-get install -y mingw-w64
+
+      # 5️⃣ Build release binary
+      - name: Build release
+        run: cargo build --release --target ${{ matrix.target }}
+
+      # 6️⃣ Package artifact
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tron_vanity-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/
