@@ -1,0 +1,13 @@
+[package]
+name = "tron_vanity_mixed"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rand = "0.8"
+secp256k1 = { version = "0.26", features = ["rand"] }
+sha3 = "0.10"
+bs58 = "0.4"
+rayon = "1.7"
+clap = { version = "4.4", features = ["derive"] }
+ocl = "0.30"  # Rust OpenCL 绑定
